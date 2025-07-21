@@ -223,6 +223,46 @@ class EventsPlannerState extends State<EventsPlanner> {
   @override
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
+
+    headersHorizontalController.dispose();
+    if (widget.automaticAdjustHorizontalScrollToDay) {
+      mainHorizontalController.position.isScrollingNotifier
+          .removeListener(automaticScrollAdjustListener);
+    }
+    if (widget.onVerticalScrollChange != null) {
+      mainVerticalController.position.isScrollingNotifier
+          .removeListener(() {
+        if (!mainVerticalController.position.isScrollingNotifier.value) {
+          widget.onVerticalScrollChange?.call(mainVerticalController.offset);
+        }
+      });
+    }
+    if (widget.minVerticalScrollOffset != null ||
+        widget.maxVerticalScrollOffset != null) {
+      mainVerticalController.removeListener(() {
+        final minOffset = widget.minVerticalScrollOffset;
+        final maxOffset = widget.maxVerticalScrollOffset;
+        if (_plannerPointerDownCount < 2) {
+          if (minOffset != null &&
+              mainVerticalController.offset < minOffset) {
+            mainVerticalController.jumpTo(minOffset);
+          }
+          if (maxOffset != null) {
+            final maxScrollExtent =
+                mainVerticalController.position.maxScrollExtent;
+            final dayOffset = heightPerMinute * 60 * 24;
+            final maxOffsetExtend = maxScrollExtent - (dayOffset - maxOffset);
+            if (mainVerticalController.offset > maxOffsetExtend) {
+              mainVerticalController.jumpTo(maxOffsetExtend);
+            }
+          }
+        }
+      });
+    }
+    mainHorizontalController.dispose();
+    mainVerticalController.dispose();
+
+
     super.dispose();
   }
 

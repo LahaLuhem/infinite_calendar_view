@@ -288,6 +288,23 @@ class EventsMonthsState extends State<EventsMonths> {
       _pointerDownCount--;
     });
   }
+
+  @override
+  void dispose() {
+    if (widget.automaticAdjustScrollToStartOfMonth) {
+      scrollController.position.isScrollingNotifier
+          .removeListener(automaticScrollAdjustListener);
+    }
+    scrollController.dispose();
+
+    if (widget.onMonthChange != null) {
+      widget.controller.removeListener(() {
+        widget.onMonthChange?.call(widget.controller.focusedDay);
+      });
+    }
+
+    super.dispose();
+  }
 }
 
 class WeekParam {
